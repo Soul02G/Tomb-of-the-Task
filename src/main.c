@@ -128,16 +128,8 @@ void InitGame(void)
         snake[i].position = (Vector2){ offset.x / 2, offset.y / 2 };
         snake[i].size = (Vector2){ SQUARE_SIZE, SQUARE_SIZE };
         snake[i].speed = (Vector2){ SQUARE_SIZE, 0 };
+        snake[i].color = rainbow[i % numColors];
 
-        for (i; i < SNAKE_LENGTH; i++)
-        {
-            snake[i].color = numColors;
-            numColors++;
-            if (numColors >= 5)
-            {
-                numColors = 0;
-            }
-        }
     }
 
     for (int i = 0; i < SNAKE_LENGTH; i++)
