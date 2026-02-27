@@ -1,8 +1,8 @@
 /*******************************************************************************************
 *
-*   raylib - classic game: arkanoid
+*   raylib - classic game: snake
 *
-*   Sample game developed by Marc Palau and Ramon Santamaria
+*   Sample game developed by Ian Eito, Albert Martos and Ramon Santamaria
 *
 *   This game has been created using raylib v1.3 (www.raylib.com)
 *   raylib is licensed under an unmodified zlib/libpng license (View raylib.h for details)
@@ -13,11 +13,6 @@
 
 #include "raylib.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
-
 #if defined(PLATFORM_WEB)
 #include <emscripten/emscripten.h>
 #endif
@@ -25,30 +20,25 @@
 //----------------------------------------------------------------------------------
 // Some Defines
 //----------------------------------------------------------------------------------
-#define PLAYER_MAX_LIFE         5
-#define LINES_OF_BRICKS         5
-#define BRICKS_PER_LINE        20
+#define SNAKE_LENGTH   256
+#define SQUARE_SIZE     31
 
 //----------------------------------------------------------------------------------
 // Types and Structures Definition
 //----------------------------------------------------------------------------------
-typedef struct Player {
+typedef struct Snake {
     Vector2 position;
     Vector2 size;
-    int life;
-} Player;
-
-typedef struct Ball {
-    Vector2 position;
     Vector2 speed;
-    int radius;
-    bool active;
-} Ball;
+    Color color;
+} Snake;
 
-typedef struct Brick {
+typedef struct Food {
     Vector2 position;
+    Vector2 size;
     bool active;
-} Brick;
+    Color color;
+} Food;
 
 //------------------------------------------------------------------------------------
 // Global Variables Declaration
@@ -56,13 +46,16 @@ typedef struct Brick {
 static const int screenWidth = 800;
 static const int screenHeight = 450;
 
+static int framesCounter = 0;
 static bool gameOver = false;
 static bool pause = false;
 
-static Player player = { 0 };
-static Ball ball = { 0 };
-static Brick brick[LINES_OF_BRICKS][BRICKS_PER_LINE] = { 0 };
-static Vector2 brickSize = { 0 };
+static Food fruit = { 0 };
+static Snake snake[SNAKE_LENGTH] = { 0 };
+static Vector2 snakePosition[SNAKE_LENGTH] = { 0 };
+static bool allowMove = false;
+static Vector2 offset = { 0 };
+static int counterTail = 0;
 
 //------------------------------------------------------------------------------------
 // Module Functions Declaration (local)
@@ -80,7 +73,7 @@ int main(void)
 {
     // Initialization (Note windowTitle is unused on Android)
     //---------------------------------------------------------
-    InitWindow(screenWidth, screenHeight, "classic game: arkanoid");
+    InitWindow(screenWidth, screenHeight, "classic game: snake");
 
     InitGame();
 
@@ -116,30 +109,34 @@ int main(void)
 // Initialize game variables
 void InitGame(void)
 {
-    brickSize = (Vector2){ GetScreenWidth() / BRICKS_PER_LINE, 40 };
+    framesCounter = 0;
+    gameOver = false;
+    pause = false;
 
-    // Initialize player
-    player.position = (Vector2){ screenWidth / 2, screenHeight * 7 / 8 };
-    player.size = (Vector2){ screenWidth / 10, 20 };
-    player.life = PLAYER_MAX_LIFE;
+    counterTail = 1;
+    allowMove = false;
 
-    // Initialize ball
-    ball.position = (Vector2){ player.position.x, player.position.y - player.size.y / 2 - ball.radius };
-    ball.speed = (Vector2){ 0, 0 };
-    ball.radius = 7;
-    ball.active = false;
+    offset.x = screenWidth % SQUARE_SIZE;
+    offset.y = screenHeight % SQUARE_SIZE;
 
-    // Initialize bricks
-    int initialDownPosition = 50;
-
-    for (int i = 0; i < LINES_OF_BRICKS; i++)
+    for (int i = 0; i < SNAKE_LENGTH; i++)
     {
-        for (int j = 0; j < BRICKS_PER_LINE; j++)
-        {
-            brick[i][j].position = (Vector2){ j * brickSize.x + brickSize.x / 2, i * brickSize.y + initialDownPosition };
-            brick[i][j].active = true;
-        }
+        snake[i].position = (Vector2){ offset.x / 2, offset.y / 2 };
+        snake[i].size = (Vector2){ SQUARE_SIZE, SQUARE_SIZE };
+        snake[i].speed = (Vector2){ SQUARE_SIZE, 0 };
+
+        if (i == 0) snake[i].color = DARKBLUE;
+        else snake[i].color = BLUE;
     }
+
+    for (int i = 0; i < SNAKE_LENGTH; i++)
+    {
+        snakePosition[i] = (Vector2){ 0.0f, 0.0f };
+    }
+
+    fruit.size = (Vector2){ SQUARE_SIZE, SQUARE_SIZE };
+    fruit.color = SKYBLUE;
+    fruit.active = false;
 }
 
 // Update game (one frame)
@@ -151,114 +148,85 @@ void UpdateGame(void)
 
         if (!pause)
         {
-            // Player movement logic
-            if (IsKeyDown(KEY_LEFT)) player.position.x -= 5;
-            if ((player.position.x - player.size.x / 2) <= 0) player.position.x = player.size.x / 2;
-            if (IsKeyDown(KEY_RIGHT)) player.position.x += 5;
-            if ((player.position.x + player.size.x / 2) >= screenWidth) player.position.x = screenWidth - player.size.x / 2;
-
-            // Ball launching logic
-            if (!ball.active)
+            // Player control
+            if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D) && (snake[0].speed.x == 0) && allowMove)
             {
-                if (IsKeyPressed(KEY_SPACE))
+                snake[0].speed = (Vector2){ SQUARE_SIZE, 0 };
+                allowMove = false;
+            }
+            if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A) && (snake[0].speed.x == 0) && allowMove)
+            {
+                snake[0].speed = (Vector2){ -SQUARE_SIZE, 0 };
+                allowMove = false;
+            }
+            if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W) && (snake[0].speed.y == 0) && allowMove)
+            {
+                snake[0].speed = (Vector2){ 0, -SQUARE_SIZE };
+                allowMove = false;
+            }
+            if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) && (snake[0].speed.y == 0) && allowMove)
+            {
+                snake[0].speed = (Vector2){ 0, SQUARE_SIZE };
+                allowMove = false;
+            }
+
+            // Snake movement
+            for (int i = 0; i < counterTail; i++) snakePosition[i] = snake[i].position;
+
+            if ((framesCounter % 5) == 0)
+            {
+                for (int i = 0; i < counterTail; i++)
                 {
-                    ball.active = true;
-                    ball.speed = (Vector2){ 0, -5 };
-                }
-            }
-
-            // Ball movement logic
-            if (ball.active)
-            {
-                ball.position.x += ball.speed.x;
-                ball.position.y += ball.speed.y;
-            }
-            else
-            {
-                ball.position = (Vector2){ player.position.x, player.position.y - player.size.y / 2 - ball.radius };
-            }
-
-            // Collision logic: ball vs walls
-            if (((ball.position.x + ball.radius) >= screenWidth) || ((ball.position.x - ball.radius) <= 0)) ball.speed.x *= -1;
-            if ((ball.position.y - ball.radius) <= 0) ball.speed.y *= -1;
-            if ((ball.position.y + ball.radius) >= screenHeight)
-            {
-                ball.speed = (Vector2){ 0, 0 };
-                ball.active = false;
-
-                player.life--;
-            }
-
-            // Collision logic: ball vs player
-            if (CheckCollisionCircleRec(ball.position, ball.radius,
-                (Rectangle) {
-                player.position.x - player.size.x / 2, player.position.y - player.size.y / 2, player.size.x, player.size.y
-            }))
-            {
-                if (ball.speed.y > 0)
-                {
-                    ball.speed.y *= -1;
-                    ball.speed.x = (ball.position.x - player.position.x) / (player.size.x / 2) * 5;
-                }
-            }
-
-            // Collision logic: ball vs bricks
-            for (int i = 0; i < LINES_OF_BRICKS; i++)
-            {
-                for (int j = 0; j < BRICKS_PER_LINE; j++)
-                {
-                    if (brick[i][j].active)
+                    if (i == 0)
                     {
-                        // Hit below
-                        if (((ball.position.y - ball.radius) <= (brick[i][j].position.y + brickSize.y / 2)) &&
-                            ((ball.position.y - ball.radius) > (brick[i][j].position.y + brickSize.y / 2 + ball.speed.y)) &&
-                            ((fabs(ball.position.x - brick[i][j].position.x)) < (brickSize.x / 2 + ball.radius * 2 / 3)) && (ball.speed.y < 0))
-                        {
-                            brick[i][j].active = false;
-                            ball.speed.y *= -1;
-                        }
-                        // Hit above
-                        else if (((ball.position.y + ball.radius) >= (brick[i][j].position.y - brickSize.y / 2)) &&
-                            ((ball.position.y + ball.radius) < (brick[i][j].position.y - brickSize.y / 2 + ball.speed.y)) &&
-                            ((fabs(ball.position.x - brick[i][j].position.x)) < (brickSize.x / 2 + ball.radius * 2 / 3)) && (ball.speed.y > 0))
-                        {
-                            brick[i][j].active = false;
-                            ball.speed.y *= -1;
-                        }
-                        // Hit left
-                        else if (((ball.position.x + ball.radius) >= (brick[i][j].position.x - brickSize.x / 2)) &&
-                            ((ball.position.x + ball.radius) < (brick[i][j].position.x - brickSize.x / 2 + ball.speed.x)) &&
-                            ((fabs(ball.position.y - brick[i][j].position.y)) < (brickSize.y / 2 + ball.radius * 2 / 3)) && (ball.speed.x > 0))
-                        {
-                            brick[i][j].active = false;
-                            ball.speed.x *= -1;
-                        }
-                        // Hit right
-                        else if (((ball.position.x - ball.radius) <= (brick[i][j].position.x + brickSize.x / 2)) &&
-                            ((ball.position.x - ball.radius) > (brick[i][j].position.x + brickSize.x / 2 + ball.speed.x)) &&
-                            ((fabs(ball.position.y - brick[i][j].position.y)) < (brickSize.y / 2 + ball.radius * 2 / 3)) && (ball.speed.x < 0))
-                        {
-                            brick[i][j].active = false;
-                            ball.speed.x *= -1;
-                        }
+                        snake[0].position.x += snake[0].speed.x;
+                        snake[0].position.y += snake[0].speed.y;
+                        allowMove = true;
                     }
+                    else snake[i].position = snakePosition[i - 1];
                 }
             }
 
-            // Game over logic
-            if (player.life <= 0) gameOver = true;
-            else
+            // Wall behaviour
+            if (((snake[0].position.x) > (screenWidth - offset.x)) ||
+                ((snake[0].position.y) > (screenHeight - offset.y)) ||
+                (snake[0].position.x < 0) || (snake[0].position.y < 0))
             {
                 gameOver = true;
+            }
 
-                for (int i = 0; i < LINES_OF_BRICKS; i++)
+            // Collision with yourself
+            for (int i = 1; i < counterTail; i++)
+            {
+                if ((snake[0].position.x == snake[i].position.x) && (snake[0].position.y == snake[i].position.y)) gameOver = true;
+            }
+
+            // Fruit position calculation
+            if (!fruit.active)
+            {
+                fruit.active = true;
+                fruit.position = (Vector2){ GetRandomValue(0, (screenWidth / SQUARE_SIZE) - 1) * SQUARE_SIZE + offset.x / 2, GetRandomValue(0, (screenHeight / SQUARE_SIZE) - 1) * SQUARE_SIZE + offset.y / 2 };
+
+                for (int i = 0; i < counterTail; i++)
                 {
-                    for (int j = 0; j < BRICKS_PER_LINE; j++)
+                    while ((fruit.position.x == snake[i].position.x) && (fruit.position.y == snake[i].position.y))
                     {
-                        if (brick[i][j].active) gameOver = false;
+                        fruit.position = (Vector2){ GetRandomValue(0, (screenWidth / SQUARE_SIZE) - 1) * SQUARE_SIZE + offset.x / 2, GetRandomValue(0, (screenHeight / SQUARE_SIZE) - 1) * SQUARE_SIZE + offset.y / 2 };
+                        i = 0;
                     }
                 }
             }
+
+            // Collision
+            if ((snake[0].position.x < (fruit.position.x + fruit.size.x) && (snake[0].position.x + snake[0].size.x) > fruit.position.x) &&
+                (snake[0].position.y < (fruit.position.y + fruit.size.y) && (snake[0].position.y + snake[0].size.y) > fruit.position.y))
+            {
+                snake[counterTail].position = snakePosition[counterTail - 1];
+                counterTail += 1;
+                fruit.active = false;
+            }
+
+            framesCounter++;
         }
     }
     else
@@ -280,27 +248,22 @@ void DrawGame(void)
 
     if (!gameOver)
     {
-        // Draw player bar
-        DrawRectangle(player.position.x - player.size.x / 2, player.position.y - player.size.y / 2, player.size.x, player.size.y, BLACK);
-
-        // Draw player lives
-        for (int i = 0; i < player.life; i++) DrawRectangle(20 + 40 * i, screenHeight - 30, 35, 10, LIGHTGRAY);
-
-        // Draw ball
-        DrawCircleV(ball.position, ball.radius, MAROON);
-
-        // Draw bricks
-        for (int i = 0; i < LINES_OF_BRICKS; i++)
+        // Draw grid lines
+        for (int i = 0; i < screenWidth / SQUARE_SIZE + 1; i++)
         {
-            for (int j = 0; j < BRICKS_PER_LINE; j++)
-            {
-                if (brick[i][j].active)
-                {
-                    if ((i + j) % 2 == 0) DrawRectangle(brick[i][j].position.x - brickSize.x / 2, brick[i][j].position.y - brickSize.y / 2, brickSize.x, brickSize.y, GRAY);
-                    else DrawRectangle(brick[i][j].position.x - brickSize.x / 2, brick[i][j].position.y - brickSize.y / 2, brickSize.x, brickSize.y, DARKGRAY);
-                }
-            }
+            DrawLineV((Vector2) { SQUARE_SIZE* i + offset.x / 2, offset.y / 2 }, (Vector2) { SQUARE_SIZE* i + offset.x / 2, screenHeight - offset.y / 2 }, LIGHTGRAY);
         }
+
+        for (int i = 0; i < screenHeight / SQUARE_SIZE + 1; i++)
+        {
+            DrawLineV((Vector2) { offset.x / 2, SQUARE_SIZE* i + offset.y / 2 }, (Vector2) { screenWidth - offset.x / 2, SQUARE_SIZE* i + offset.y / 2 }, LIGHTGRAY);
+        }
+
+        // Draw snake
+        for (int i = 0; i < counterTail; i++) DrawRectangleV(snake[i].position, snake[i].size, snake[i].color);
+
+        // Draw fruit to pick
+        DrawRectangleV(fruit.position, fruit.size, fruit.color);
 
         if (pause) DrawText("GAME PAUSED", screenWidth / 2 - MeasureText("GAME PAUSED", 40) / 2, screenHeight / 2 - 40, 40, GRAY);
     }
