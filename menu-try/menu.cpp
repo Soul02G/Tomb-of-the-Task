@@ -1,57 +1,124 @@
-#include "menu.h"
+﻿#include "menu.h"
 #include <stdio.h>
 
-void MenuLoad(MenuState* ms) {
-    char path[256];
-    for (int i = 0; i < MENU_FRAME_COUNT; i++) {
-        sprintf(path, "resources\\frame_%02d.png", i + 1);
-        ms->frames[i] = LoadTexture(path);
-    }
-    ms->currentFrame = 0;
-    ms->frameTimer = 0;
+void MenuLoad(MenuState* menuState) {
+    char filePath[256];
 
-    InitAudioDevice();
-    ms->music = LoadMusicStream("cosas de la wiki\\main screen track.wav");
-    PlayMusicStream(ms->music);
+    for (int i = 0; i < MENU_FRAME_COUNT; i++) {
+        sprintf(filePath, "resources\\frame_%02d.png", i + 1);
+        menuState->backgroundFrames[i] = LoadTexture(filePath);
+    }
+
+    for (int i = 0; i < ZOOM_FRAME_COUNT; i++) {
+        sprintf(filePath, "resources\\zoom_%02d.png", i + 1);
+        menuState->zoomFrames[i] = LoadTexture(filePath);
+    }
+
+    menuState->currentBackgroundFrame = 0;
+    menuState->backgroundFrameTimer = 0;
+    menuState->currentZoomFrame = 0;
+    menuState->zoomFrameTimer = 0;
+    menuState->transitionState = 0;
+    menuState->soundTimer = 0.0f;
+    menuState->soundDuration = 1.58f; // duracion exacta del wav
+
+    menuState->backgroundMusic = LoadMusicStream("cosas de la wiki\\main screen track.wav");
+    menuState->transitionSound = LoadSound("cosas de la wiki\\zoom in start the game.wav");
+    PlayMusicStream(menuState->backgroundMusic);
 }
 
-Scene MenuUpdate(MenuState* ms) {
-    UpdateMusicStream(ms->music);
+Scene MenuUpdate(MenuState* menuState) {
+    float dt = GetFrameTime();
+    UpdateMusicStream(menuState->backgroundMusic);
 
-    ms->frameTimer++;
-    if (ms->frameTimer >= MENU_ANIM_SPEED) {
-        ms->frameTimer = 0;
-        ms->currentFrame = (ms->currentFrame + 1) % MENU_FRAME_COUNT;
+    // Avanza animación de fondo siempre
+    menuState->backgroundFrameTimer++;
+    if (menuState->backgroundFrameTimer >= MENU_ANIMATION_SPEED) {
+        menuState->backgroundFrameTimer = 0;
+        menuState->currentBackgroundFrame = (menuState->currentBackgroundFrame + 1) % MENU_FRAME_COUNT;
     }
 
-    if (GetKeyPressed() != 0)
-        return SCENE_GAME;
+    // Estado 0: esperando input
+    if (menuState->transitionState == 0) {
+        if (GetKeyPressed() != 0) {
+            PlaySound(menuState->transitionSound);
+            StopMusicStream(menuState->backgroundMusic);
+
+            menuState->currentZoomFrame = 0;
+            menuState->zoomFrameTimer = 0;
+            menuState->soundTimer = 0.0f; // ✅ reiniciar timer
+            menuState->transitionState = 1;
+        }
+        return SCENE_MENU;
+    }
+
+    // Estado 1: sonido y zoom arrancan a la vez
+    if (menuState->transitionState == 1) {
+        menuState->soundTimer += dt; // ✅ contar tiempo del sonido
+
+        menuState->zoomFrameTimer++;
+        if (menuState->zoomFrameTimer >= ZOOM_ANIMATION_SPEED) {
+            menuState->zoomFrameTimer = 0;
+            menuState->currentZoomFrame++;
+        }
+
+        // ✅ cambiar escena cuando termina el sonido, no el zoom
+        if (menuState->soundTimer >= menuState->soundDuration) {
+            return SCENE_GAME;
+        }
+    }
 
     return SCENE_MENU;
 }
 
-void MenuDraw(const MenuState* ms, int screenWidth, int screenHeight) {
+void MenuDraw(const MenuState* menuState, int screenWidth, int screenHeight) {
     ClearBackground(BLACK);
 
-    Texture2D frame = ms->frames[ms->currentFrame];
-
-    float scale = (float)screenWidth / (float)frame.width;
+    // Fondo animado
+    Texture2D bg = menuState->backgroundFrames[menuState->currentBackgroundFrame];
+    float scaleX = (float)screenWidth / (float)bg.width;
+    float scaleY = (float)screenHeight / (float)bg.height;
+    float scale = (scaleX < scaleY) ? scaleX : scaleY;
     float visibleH = (float)screenHeight / scale;
-    float cropOffsetY = (frame.height - visibleH) / 2.0f;
+    float cropOffsetY = (bg.height - visibleH) / 2.0f;
     if (cropOffsetY < 0) cropOffsetY = 0;
 
-    Rectangle src = { 0, cropOffsetY, (float)frame.width, visibleH };
-    Rectangle dest = { 0, 0, (float)screenWidth, (float)screenHeight };
-    Vector2 origin = { 0, 0 };
+    DrawTexturePro(bg,
+        { 0, cropOffsetY, (float)bg.width, visibleH },
+        { 0, 0, (float)screenWidth, (float)screenHeight },
+        { 0, 0 }, 0.0f, WHITE);
 
-    DrawTexturePro(frame, src, dest, origin, 0.0f, WHITE);
+    // ✅ Zoom desde estado 1 (FIX aplicado)
+    if (menuState->transitionState == 1) {
+        int frame = menuState->currentZoomFrame;
+
+        // mantener último frame si se pasa
+        if (frame >= ZOOM_FRAME_COUNT) {
+            frame = ZOOM_FRAME_COUNT - 1;
+        }
+
+        Texture2D zf = menuState->zoomFrames[frame];
+        float zscaleX = (float)screenWidth / (float)zf.width;
+        float zscaleY = (float)screenHeight / (float)zf.height;
+        float zscale = (zscaleX > zscaleY) ? zscaleX : zscaleY;
+        float zvisibleW = (float)screenWidth / zscale;
+        float zvisibleH = (float)screenHeight / zscale;
+        float zcropX = (zf.width - zvisibleW) / 2.0f;
+        float zcropY = (zf.height - zvisibleH) / 2.0f;
+        if (zcropX < 0) zcropX = 0;
+        if (zcropY < 0) zcropY = 0;
+
+        DrawTexturePro(zf,
+            { zcropX, zcropY, zvisibleW, zvisibleH },
+            { 0, 0, (float)screenWidth, (float)screenHeight },
+            { 0, 0 }, 0.0f, WHITE);
+    }
 }
 
-void MenuUnload(MenuState* ms) {
-    StopMusicStream(ms->music);
-    UnloadMusicStream(ms->music);
-    CloseAudioDevice();
-
-    for (int i = 0; i < MENU_FRAME_COUNT; i++)
-        UnloadTexture(ms->frames[i]);
+void MenuUnload(MenuState* menuState) {
+    StopMusicStream(menuState->backgroundMusic);
+    UnloadMusicStream(menuState->backgroundMusic);
+    UnloadSound(menuState->transitionSound);
+    for (int i = 0; i < MENU_FRAME_COUNT; i++) UnloadTexture(menuState->backgroundFrames[i]);
+    for (int i = 0; i < ZOOM_FRAME_COUNT; i++) UnloadTexture(menuState->zoomFrames[i]);
 }
