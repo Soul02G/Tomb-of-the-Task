@@ -1,55 +1,47 @@
 # Tomb of the Mask - Pang-All-In
 
-**Repository:** [https://github.com/Soul02G/Tomb-of-the-Task]
-
-**Gameplay Showcase:** [https://youtu.be/r47JnpMhBmg]
+**Repository:** [https://github.com/Soul02G/Tomb-of-the-Task]  
+**Gameplay Showcase:** [https://www.youtube.com/watch?v=Ll6k-AUtnRM&t=65s]
 
 ## Team Members
-
 * Sergio Garcia Pérez: @soul02G
 * Jordi Fernández Prat: @jordifdezzz
 * Sergio Andrés Llanos Orozco: @Serinio28
 * Andrea Vasco Peiró: @Andreavsc30
-* Vladimir Solovevñ: @Undermancer
+* Vladimir Solovev: @Undermancer
 
 ## Description
-This project is a recreation of the original video game *Tomb of the Mask*, wich is an arcade-style labyrinth game where the difficulty increases with each level.
-The gameplay revolves around a dash mechanic that allows the player to move from wall to wall.Players must collect coins and stars, outsmart deadly traps like spike walls,
- and dodge enemies to reach the finish line.
+This project is a recreation of the original video game *Tomb of the Mask*, which is an arcade-style labyrinth game where the difficulty increases with each level.
+The gameplay revolves around a dash mechanic that allows the player to move from wall to wall. Players must collect coins and stars, outsmart deadly traps like spike walls,
+and dodge enemies to reach the finish line.
 
 ## How to Play
-The objective is to navigate the labyrinth and reach the finish line of each level. You move by dashing in a straight line until you hit a wall. 
+The objective is to navigate the labyrinth and reach the finish line of each level. You move by dashing in a straight line until you hit a wall.
 Beware of touching any elements that cause the character to die.
 
 **Controls:**
-
-* **Movement (Dash):** `W` `A` `S` `D` / `Arrow Keys` (The character moves from wall to wall without stopping )
-* **Settings:** `M` 
+* **Movement (Dash):** `W` `A` `S` `D` / `Arrow Keys` (The character moves from wall to wall without stopping)
+* **Settings:** `M`
 * **Change settings:** `Enter`
 * **Select level:** `Space`
 
 ## Features Implemented
-
 * **Labyrinths:** Creation of the labyrinth for each level with increasing difficulty, accessible via a level selector interface.
-
 * **Movement & Mechanics:**
-
     * **Dash:** Mechanics allowing the player to move from wall to wall.
     * **Camera Tracking:** The camera is strictly centered on the character at all times, regardless of movement.
     * **Rebound:** Special squares that redirect the player towards the square it is facing upon touch.
     * **Trail:** Character trail design that goes along with the movement.
     * **Economy:** Coin and star creation, detection upon touch, and collection into a counter.
     * **UX & UI:** Functional configuration menu with sliders, pause menu, game data saving, a screen upon completion, and a credit screen.
-
+    * **Red and Blue:** Alternating tiles that turn solid and not solid each time the player moves.
+    * **Spikes:** Tiles that cause automatic game loss on contact.
+    * **Deploying Spikes:** Tiles that when the player gets in contact, after a brief period of time deploy a set of spikes that cause automatic loss.
 * **Debug Options:**
-
-
-    * **Immortality:** Allows the player to not die under any circumstance with the LCTRL + 1 + P combination.
-
-    * **Hitbox View:** Shows all the hitboxes instead of the sprites with the LCTRL + 2 + P combination.
-
-    * **Maxed Out:** Unlocks all levels with 3 stars and gives sets coins at 999 with the LCTRL + 3 + P combination. MUST BE INSIDE A LEVEL TO USE.
-
+    * **Immortality:** Allows the player to not die under any circumstance with the `LCTRL + 1 + P` combination.
+    * **Hitbox View:** Shows all the hitboxes instead of the sprites with the `LCTRL + 2 + P` combination.
+    * **Maxed Out:** Unlocks all levels with 3 stars and sets coins at 999 with the `LCTRL + 3 + P` combination. MUST BE INSIDE A LEVEL TO USE.
 * **Enemies:**
-
     * **Bats:** Follow a linear, rectilinear movement and cause automatic game loss on contact.
+    * **Archer:** Follow a linear arrow, rectilinear movement and cause automatic game loss on contact.
+    * **Monkey:** Follow a vertical linear movement, drops a coconut and causes automatic game loss on contact.
