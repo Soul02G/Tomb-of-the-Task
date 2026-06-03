@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tomb of the Task</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: #7a6230;
+    --stone: #1a1612;
+    --stone-mid: #2a2420;
+    --stone-light: #3a3028;
+    --stone-border: #4a4038;
+    --text: #e8dcc8;
+    --text-muted: #a09070;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--stone);
+    color: var(--text);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 2rem;
+    position: relative;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 60%),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 39px,
+        rgba(255,255,255,0.015) 39px,
+        rgba(255,255,255,0.015) 40px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 39px,
+        rgba(255,255,255,0.015) 39px,
+        rgba(255,255,255,0.015) 40px
+      );
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 100%, rgba(201,168,76,0.04) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.4em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    font-weight: 900;
+    line-height: 1;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    text-shadow: 0 0 60px rgba(201,168,76,0.2);
+    margin-bottom: 0.3em;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  .hero-subtitle {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .divider {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    margin: 2rem auto;
+    animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .hero-desc {
+    max-width: 560px;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    animation: fadeUp 0.8s 0.4s ease both;
+    margin-bottom: 2.5rem;
+  }
+
+  .cta-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadeUp 0.8s 0.5s ease both;
+  }
+
+  .btn {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    padding: 0.85em 2em;
+    text-decoration: none;
+    border: 1px solid;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: var(--gold);
+    color: var(--stone);
+    border-color: var(--gold);
+  }
+  .btn-primary:hover { background: var(--gold-light); border-color: var(--gold-light); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--gold);
+    border-color: var(--gold-dim);
+  }
+  .btn-outline:hover { border-color: var(--gold); background: rgba(201,168,76,0.07); }
+
+  /* SECTIONS */
+  section {
+    padding: 5rem 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.45em;
+    color: var(--gold-dim);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  h2 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 2rem;
+  }
+
+  /* HOW TO PLAY */
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1px;
+    border: 1px solid var(--stone-border);
+    margin-top: 2rem;
+  }
+
+  .control-item {
+    padding: 1.25rem 1.5rem;
+    background: var(--stone-mid);
+    border: 1px solid var(--stone-border);
+  }
+
+  .control-key {
+    font-family: 'Cinzel', serif;
+    font-size: 0.85rem;
+    color: var(--gold);
+    margin-bottom: 0.3rem;
+    letter-spacing: 0.1em;
+  }
+
+  .control-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  kbd {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    background: var(--stone-light);
+    border: 1px solid var(--stone-border);
+    color: var(--gold-light);
+    padding: 0.15em 0.5em;
+    letter-spacing: 0.05em;
+    margin: 0 1px;
+  }
+
+  /* FEATURES */
+  .features-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+
+  .feature-item {
+    padding: 1.5rem;
+    background: var(--stone-mid);
+    border: 1px solid var(--stone-border);
+    border-top: 2px solid var(--gold-dim);
+    transition: border-top-color 0.2s;
+  }
+  .feature-item:hover { border-top-color: var(--gold); }
+
+  .feature-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    color: var(--gold-light);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.08em;
+  }
+
+  .feature-desc {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  /* DEBUG */
+  .debug-block {
+    background: var(--stone-mid);
+    border: 1px solid var(--stone-border);
+    border-left: 3px solid var(--gold-dim);
+    padding: 1.5rem 2rem;
+    margin-top: 1rem;
+  }
+
+  .debug-block + .debug-block { margin-top: 0.75rem; }
+
+  .debug-combo {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    color: var(--gold);
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.1em;
+  }
+
+  .debug-desc {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* TEAM */
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    margin-top: 1rem;
+    border: 1px solid var(--stone-border);
+  }
+
+  .team-member {
+    padding: 1.5rem 1.25rem;
+    background: var(--stone-mid);
+    border: 1px solid var(--stone-border);
+    text-align: center;
+  }
+
+  .member-initial {
+    width: 48px;
+    height: 48px;
+    background: var(--stone-light);
+    border: 1px solid var(--gold-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    color: var(--gold);
+    margin: 0 auto 0.75rem;
+  }
+
+  .member-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    color: var(--text);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+  }
+
+  .member-handle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--stone-border);
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+
+  footer a {
+    color: var(--gold-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  footer a:hover { color: var(--gold); }
+
+  /* SEPARATOR */
+  .sep {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--stone-border), transparent);
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <p class="hero-eyebrow">Pang-All-In Studios presents</p>
+  <h1 class="hero-title">Tomb of<br>the Task</h1>
+  <p class="hero-subtitle">Arcade · Labyrinth · Arcade</p>
+  <div class="divider"></div>
+  <p class="hero-desc">
+    Navigate ancient labyrinths. Dash from wall to wall. Collect relics, outsmart deadly traps, and survive the darkness.
+  </p>
+  <div class="cta-group">
+    <a href="https://www.youtube.com/watch?v=rIOvU7RLZ3o" target="_blank" class="btn btn-primary">Watch Gameplay</a>
+    <a href="https://github.com/Soul02G/Tomb-of-the-Task" target="_blank" class="btn btn-outline">View Repository</a>
+  </div>
+</div>
+
+<div class="sep"></div>
+
+<!-- DESCRIPTION -->
+<section class="reveal">
+  <p class="section-label">About the Game</p>
+  <h2>What is Tomb of the Task?</h2>
+  <p>
+    A faithful recreation of the classic arcade game <em>Tomb of the Mask</em> — an increasingly difficult labyrinth experience built by five developers. The gameplay revolves around a dash mechanic that sends your character flying from wall to wall. Collect coins and stars, survive spike traps, and defeat enemies to reach the finish line.
+  </p>
+</section>
+
+<div class="sep"></div>
+
+<!-- HOW TO PLAY -->
+<section class="reveal">
+  <p class="section-label">Instructions</p>
+  <h2>How to Play</h2>
+  <p>Navigate the labyrinth and reach the finish line of each level. You move by dashing in a straight line until you hit a wall. Beware of anything that causes your character to perish.</p>
+  <div class="controls-grid">
+    <div class="control-item">
+      <p class="control-key"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / Arrow Keys</p>
+      <p class="control-desc">Dash — move from wall to wall</p>
+    </div>
+    <div class="control-item">
+      <p class="control-key"><kbd>M</kbd></p>
+      <p class="control-desc">Open settings</p>
+    </div>
+    <div class="control-item">
+      <p class="control-key"><kbd>Enter</kbd></p>
+      <p class="control-desc">Change settings</p>
+    </div>
+    <div class="control-item">
+      <p class="control-key"><kbd>Space</kbd></p>
+      <p class="control-desc">Select level</p>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- FEATURES -->
+<section class="reveal">
+  <p class="section-label">Features</p>
+  <h2>What's Inside</h2>
+  <ul class="features-list">
+    <li class="feature-item">
+      <p class="feature-title">Labyrinths</p>
+      <p class="feature-desc">Hand-crafted levels with increasing difficulty, accessible via a level selector interface.</p>
+    </li>
+    <li class="feature-item">
+      <p class="feature-title">Dash Mechanics</p>
+      <p class="feature-desc">Fluid wall-to-wall movement with camera tracking strictly centered on the character at all times.</p>
+    </li>
+    <li class="feature-item">
+      <p class="feature-title">Rebound Tiles</p>
+      <p class="feature-desc">Special squares that redirect the player toward the direction they are facing upon contact.</p>
+    </li>
+    <li class="feature-item">
+      <p class="feature-title">Red & Blue Tiles</p>
+      <p class="feature-desc">Alternating tiles that turn solid or passable each time the player moves.</p>
+    </li>
+    <li class="feature-item">
+      <p class="feature-title">Spikes & Traps</p>
+      <p class="feature-desc">Static spikes and deploying spike tiles that trigger after a brief delay — instant death on contact.</p>
+    </li>
+    <li class="feature-item">
+      <p class="feature-title">Economy</p>
+      <p class="feature-desc">Coins and stars scattered throughout levels, collected into a persistent counter.</p>
+    </li>
+    <li class="feature-item">
+      <p class="feature-title">Enemies</p>
+      <p class="feature-desc">Bats, Archers, and Monkeys — each with unique movement patterns and projectile attacks.</p>
+    </li>
+    <li class="feature-item">
+      <p class="feature-title">Full UI System</p>
+      <p class="feature-desc">Configuration menu with sliders, pause menu, game data saving, completion screen, and credits.</p>
+    </li>
+  </ul>
+</section>
+
+<div class="sep"></div>
+
+<!-- DEBUG -->
+<section class="reveal">
+  <p class="section-label">Developer Options</p>
+  <h2>Debug Codes</h2>
+  <div class="debug-block">
+    <p class="debug-combo"><kbd>LCTRL</kbd> + <kbd>1</kbd> + <kbd>P</kbd> — Immortality</p>
+    <p class="debug-desc">The character cannot die under any circumstance.</p>
+  </div>
+  <div class="debug-block">
+    <p class="debug-combo"><kbd>LCTRL</kbd> + <kbd>2</kbd> + <kbd>P</kbd> — Hitbox View</p>
+    <p class="debug-desc">Replaces all sprites with their hitbox outlines.</p>
+  </div>
+  <div class="debug-block">
+    <p class="debug-combo"><kbd>LCTRL</kbd> + <kbd>3</kbd> + <kbd>P</kbd> — Maxed Out</p>
+    <p class="debug-desc">Unlocks all levels with 3 stars and sets coins to 999. Must be inside a level to activate.</p>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- TEAM -->
+<section class="reveal">
+  <p class="section-label">The Builders</p>
+  <h2>Team Members</h2>
+  <div class="team-grid">
+    <div class="team-member">
+      <div class="member-initial">SG</div>
+      <p class="member-name">Sergio Garcia Pérez</p>
+      <p class="member-handle">@soul02G</p>
+    </div>
+    <div class="team-member">
+      <div class="member-initial">JF</div>
+      <p class="member-name">Jordi Fernández Prat</p>
+      <p class="member-handle">@jordifdezzz</p>
+    </div>
+    <div class="team-member">
+      <div class="member-initial">SL</div>
+      <p class="member-name">Sergio A. Llanos Orozco</p>
+      <p class="member-handle">@Serinio28</p>
+    </div>
+    <div class="team-member">
+      <div class="member-initial">AV</div>
+      <p class="member-name">Andrea Vasco Peiró</p>
+      <p class="member-handle">@Andreavsc30</p>
+    </div>
+    <div class="team-member">
+      <div class="member-initial">VS</div>
+      <p class="member-name">Vladimir Solovev</p>
+      <p class="member-handle">@Undermancer</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>Pang-All-In Studios &nbsp;·&nbsp; <a href="https://github.com/Soul02G/Tomb-of-the-Task" target="_blank">GitHub Repository</a> &nbsp;·&nbsp; <a href="https://www.youtube.com/watch?v=rIOvU7RLZ3o" target="_blank">Gameplay Showcase</a></p>
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
